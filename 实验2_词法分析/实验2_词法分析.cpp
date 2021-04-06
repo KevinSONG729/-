@@ -1,21 +1,111 @@
-﻿// 实验2_词法分析.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
+﻿#include <iostream>
+#include <fstream>
+#include <regex>
+#include <string>
+#include <vector>
+#define MAX 100000
+using namespace std;
 
-#include <iostream>
+struct words {
+    string type;
+    string word;
+};
+
+string readFile() {
+    char temp[1024] = { 0 };
+    string data;
+    ifstream infile;
+    infile.open("input.txt");
+    infile.getline(temp, MAX, 0);
+    infile.close();
+    data = temp;
+    transform(data.begin(), data.end(), data.begin(), ::tolower);
+    return data;
+}
+
+vector<string> Match(string data) {
+    smatch m;
+    string k("");
+    regex e1("([0-9]+[a-z]+)+",regex_constants::icase);
+    // |\\+|-|\\*|/|=|#|<=?|>=?|:=
+    // ([a-z]+[0-9]*)+|[0-9]+|\\(|\\)|,|;|.|\\+|-|\\*|/|=|#|<=?|>=?|:=
+    regex e2("([a-z]+[0-9]*)+|[0-9]+|\\(|\\)|,|;|\\.|[\\+|-|\\*|/|:|#|<|>|=]+", regex_constants::icase);
+
+    regex e3("\r");
+    data = regex_replace(data, e3, k);
+
+    bool err_flag = regex_search(data, m, e1);
+    if (err_flag == true) {
+        cout << "invalid words!"<<endl;
+        exit(0);
+    }
+
+    vector<string> matched;
+    sregex_iterator beginitr(data.cbegin(), data.cend(), e2);
+    sregex_iterator enditr;
+    for (sregex_iterator itr = beginitr; itr != enditr; ++itr) {
+        if (itr->str() != " " && itr->str() != "\n") {
+            // cout << itr->str() << endl;
+            matched.push_back(itr->str());
+        }
+    }
+    /*for (auto &i : matched) {
+        cout << i;
+    }*/
+    return matched;
+}
+
+vector<words> group(vector<string> matched, words w[]) {
+    vector<words> res;
+    regex e1("[0-9]+");
+    regex e2("([a-z]+[0-9]*)+", regex_constants::icase);
+    regex e3("[\\+|-|\\*|/|:|#|<|>|=]+");
+    regex e[3] = { e1,e2,e3 };
+    for (auto& i : matched) {
+        bool flag = 0;
+        for (int j = 0; j < 29; j++) {
+            if (i == w[j].word) {
+                res.push_back(w[j]);
+                flag = 1;
+                break;
+            }
+        }
+        if (!flag) {
+            bool p = false;
+            for (int j = 0; j < 3; j++) {
+                p = regex_match(i, e[j]);
+                if (p) {
+                    switch (j) {
+                    case 0: res.push_back({ "number",i }); break;
+                    case 1: res.push_back({ "ident",i }); break;
+                    case 2: {
+                        cout << "invalid words!" << endl;
+                        exit(0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return res;
+}
+
+void display(vector<words> res) {
+    for (auto& i : res) {
+        cout <<"("<< i.type << "," << i.word <<")"<< endl;
+    }
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    words w[] = { {"beginsym","begin"}, {"callsym","call"}, {"constsym","const"}, {"dosym","do"},
+        {"endsym","end"}, {"ifsym","if"}, {"oddsym","odd"}, {"proceduresym","procedure"}, {"readsym","read"},
+        {"thensym","then"}, {"varsym","var"}, {"whilesym","while"}, {"writesym","write"}, {"plus","+"}, {"minus","-"},
+        {"times","*"}, {"slash","/"}, {"eql","="}, {"neq","#"}, {"lss","<"}, {"leq","<="}, {"gtr",">"}, {"geq",">="},
+        {"becomes",":="}, {"Lparen","("}, {"rparen",")"}, {"comma",","}, {"semicolon",";"}, {"period","."} };
+    string data = readFile();
+    cout << data<< endl;
+    vector<string> matched = Match(data);
+    vector<words> res = group(matched, w);
+    display(res);
 }
-
-// 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
-// 调试程序: F5 或调试 >“开始调试”菜单
-
-
-// 入门使用技巧: 
-//   1. 使用解决方案资源管理器窗口添加/管理文件
-//   2. 使用团队资源管理器窗口连接到源代码管理
-//   3. 使用输出窗口查看生成输出和其他消息
-//   4. 使用错误列表窗口查看错误
-//   5. 转到“项目”>“添加新项”以创建新的代码文件，或转到“项目”>“添加现有项”以将现有代码文件添加到项目
-//   6. 将来，若要再次打开此项目，请转到“文件”>“打开”>“项目”并选择 .sln 文件

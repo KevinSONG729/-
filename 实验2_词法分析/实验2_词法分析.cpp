@@ -29,14 +29,14 @@ vector<string> Match(string data) {
     regex e1("([0-9]+[a-z]+)+",regex_constants::icase);
     // |\\+|-|\\*|/|=|#|<=?|>=?|:=
     // ([a-z]+[0-9]*)+|[0-9]+|\\(|\\)|,|;|.|\\+|-|\\*|/|=|#|<=?|>=?|:=
-    regex e2("([a-z]+[0-9]*)+|[0-9]+|\\(|\\)|,|;|\\.|[\\+|-|\\*|/|:|#|<|>|=]+", regex_constants::icase);
+    regex e2("([a-z]+[0-9]*)+|[0-9]+\\.?[0-9]*|\\(|\\)|,|;|\\.|[\\+|-|\\*|/|:|#|<|>|=]+", regex_constants::icase);
 
     regex e3("\r");
     data = regex_replace(data, e3, k);
 
     bool err_flag = regex_search(data, m, e1);
     if (err_flag == true) {
-        cout << "invalid words!"<<endl;
+        cout << m[0]<< " is an invalid ident!"<<endl;
         exit(0);
     }
 
@@ -45,7 +45,7 @@ vector<string> Match(string data) {
     sregex_iterator enditr;
     for (sregex_iterator itr = beginitr; itr != enditr; ++itr) {
         if (itr->str() != " " && itr->str() != "\n") {
-            // cout << itr->str() << endl;
+            //cout << itr->str() << endl;
             matched.push_back(itr->str());
         }
     }
@@ -60,7 +60,8 @@ vector<words> group(vector<string> matched, words w[]) {
     regex e1("[0-9]+");
     regex e2("([a-z]+[0-9]*)+", regex_constants::icase);
     regex e3("[\\+|-|\\*|/|:|#|<|>|=]+");
-    regex e[3] = { e1,e2,e3 };
+    regex e4("[0-9]+\\.[0-9]+");
+    regex e[4] = { e1,e2,e3,e4 };
     for (auto& i : matched) {
         bool flag = 0;
         for (int j = 0; j < 29; j++) {
@@ -72,14 +73,18 @@ vector<words> group(vector<string> matched, words w[]) {
         }
         if (!flag) {
             bool p = false;
-            for (int j = 0; j < 3; j++) {
+            for (int j = 0; j < 4; j++) {
                 p = regex_match(i, e[j]);
                 if (p) {
                     switch (j) {
                     case 0: res.push_back({ "number",i }); break;
                     case 1: res.push_back({ "ident",i }); break;
                     case 2: {
-                        cout << "invalid words!" << endl;
+                        cout << i<< " is an invalid symbol!" << endl;
+                        exit(0);
+                        }
+                    case 3: {
+                        cout << i << " is an invalid number!" << endl;
                         exit(0);
                         }
                     }

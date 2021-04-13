@@ -26,12 +26,12 @@ string readFile() {
 vector<string> Match(string data) {
     smatch m;
     string k("");
-    regex e1("([0-9]+[a-z]+)+",regex_constants::icase);
+    regex e1("([0-9|$|!|%|@|//^|//~||//、]+[a-z|_]+)+",regex_constants::icase);
     // |\\+|-|\\*|/|=|#|<=?|>=?|:=
     // ([a-z]+[0-9]*)+|[0-9]+|\\(|\\)|,|;|.|\\+|-|\\*|/|=|#|<=?|>=?|:=
-    regex e2("([a-z]+[0-9]*)+|[0-9]+\\.?[0-9]*|\\(|\\)|,|;|\\.|[\\+|-|\\*|/|:|#|<|>|=]+", regex_constants::icase);
+    regex e2("([a-z|_]+[0-9]*)+|[0-9]+\\.?[0-9]*|\\(|\\)|,|;|\\.|[\\+|-|\\*|/|:|#|<|>|=]+", regex_constants::icase);
 
-    regex e3("\r");
+    regex e3("\\r|\\n");
     data = regex_replace(data, e3, k);
 
     bool err_flag = regex_search(data, m, e1);
@@ -45,7 +45,7 @@ vector<string> Match(string data) {
     sregex_iterator enditr;
     for (sregex_iterator itr = beginitr; itr != enditr; ++itr) {
         if (itr->str() != " " && itr->str() != "\n") {
-            //cout << itr->str() << endl;
+            cout << itr->str() << endl;
             matched.push_back(itr->str());
         }
     }
@@ -58,7 +58,7 @@ vector<string> Match(string data) {
 vector<words> group(vector<string> matched, words w[]) {
     vector<words> res;
     regex e1("[0-9]+");
-    regex e2("([a-z]+[0-9]*)+", regex_constants::icase);
+    regex e2("([a-z|_]+[0-9]*)+", regex_constants::icase);
     regex e3("[\\+|-|\\*|/|:|#|<|>|=]+");
     regex e4("[0-9]+\\.[0-9]+");
     regex e[4] = { e1,e2,e3,e4 };
@@ -99,6 +99,13 @@ void display(vector<words> res) {
     for (auto& i : res) {
         cout <<"("<< i.type << "," << i.word <<")"<< endl;
     }
+    ofstream outfile;
+    outfile.open("output.txt");
+    for (auto& i : res) {
+        string x = "(" + i.type + "," + i.word + ")\n";
+        outfile << x;
+    }
+    outfile.close();
 }
 
 int main()
@@ -109,7 +116,7 @@ int main()
         {"times","*"}, {"slash","/"}, {"eql","="}, {"neq","#"}, {"lss","<"}, {"leq","<="}, {"gtr",">"}, {"geq",">="},
         {"becomes",":="}, {"Lparen","("}, {"rparen",")"}, {"comma",","}, {"semicolon",";"}, {"period","."} };
     string data = readFile();
-    cout << data<< endl;
+    // cout << data<< endl;
     vector<string> matched = Match(data);
     vector<words> res = group(matched, w);
     display(res);
